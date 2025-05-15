@@ -88,6 +88,7 @@ DATABASES = {
         "PASSWORD": env("DATABASE_PASSWORD", default=""),
         "HOST": env("DATABASE_HOST", default=""),
         "PORT": env("DATABASE_PORT", default=""),
+        "OPTIONS": {"sslmode": "require" if env("DATABASE_REQUIRE_SSLMODE", default="False") == "True" else "disable"},
     }
 }
 

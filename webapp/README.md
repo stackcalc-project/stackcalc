@@ -61,13 +61,13 @@ DJANGO_CSRF_TRUSTED_ORIGINS=http://127.0.0.1:8000
 DJANGO_SUPERUSER_USERNAME=admin
 DJANGO_SUPERUSER_PASSWORD=admin
 DJANGO_SUPERUSER_EMAIL=info@stackcalc.com
-
 DATABASE_ENGINE=django.db.backends.postgresql
 DATABASE_NAME=stackcalc_webapp
 DATABASE_USER=postgres
 DATABASE_PASSWORD=admin
 DATABASE_HOST=stackcalc-webapp-db
 DATABASE_PORT=5432
+DATABASE_REQUIRE_SSLMODE=False
 ```
 
 Remove containers from previously started runs.
