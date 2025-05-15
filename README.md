@@ -1,2 +1,4 @@
+<img src="logo.png" align="right" width="80px" height="80px"/>
+
 # stackcalc
-The main monorepo for OSS core stackcalc experience.
+TODO
