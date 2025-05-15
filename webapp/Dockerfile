@@ -1,31 +1,39 @@
-# First, build the application in the `/app` directory.
-FROM ghcr.io/astral-sh/uv:python3.12-bookworm-slim AS builder
-ENV UV_COMPILE_BYTECODE=1
-ENV UV_LINK_MODE=copy
-WORKDIR /app
-RUN --mount=type=cache,target=/root/.cache/uv \
-    --mount=type=bind,source=uv.lock,target=uv.lock \
-    --mount=type=bind,source=pyproject.toml,target=pyproject.toml \
-    uv sync --frozen --no-install-project --no-dev
-ADD . /app
-RUN --mount=type=cache,target=/root/.cache/uv \
-    uv sync --frozen --no-dev
+# Base image: Python 3.13 slim version for a minimal footprint
+FROM python:3.13-slim AS builder
 
-# Then, use a final image without uv
-FROM python:3.12-slim-bookworm
-
-# Copy the application from the builder
-COPY --from=builder --chown=app:app /app /app
-
+# Set working directory for all subsequent commands
 WORKDIR /app
 
-# Set environment variables
+# Python environment variables:
+# Prevents Python from writing .pyc files to disk
 ENV PYTHONDONTWRITEBYTECODE=1
+# Ensures Python output is sent straight to terminal without buffering
 ENV PYTHONUNBUFFERED=1
-ENV PATH="/app/.venv/bin:$PATH"
 
-# Expose port 8000
+# Upgrade pip to latest version
+RUN pip install --upgrade pip
+
+# Install system dependencies:
+# libpq-dev: Required for psycopg2 (PostgreSQL adapter)
+# libffi-dev: Required for django-allauth
+# gcc: Required for compiling some Python packages
+RUN apt-get update \
+    && apt-get -y install libpq-dev libffi-dev gcc
+
+# Copy requirements file first to leverage Docker cache
+COPY requirements.txt .
+# Install Python dependencies without storing pip cache
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copy the rest of application code to container
+COPY . .
+
+# Document that the container listens on port 8000
 EXPOSE 8000
 
-# Use gunicorn on port 8000
-CMD ["gunicorn", "--bind", ":8000", "--workers", "2", "project.wsgi"]
+# Make the entrypoint script executable
+RUN chmod +x  /app/entrypoint.prod.sh
+
+# Set the entrypoint script as the default command
+# This will run migrations, collect static files, and start Gunicorn
+CMD ["/app/entrypoint.prod.sh"]
